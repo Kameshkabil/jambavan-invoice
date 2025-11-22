@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@300;400;700&family=Source+Code+Pro:wght@700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<style>
+/* ---------------------------------------------------------------------- */
+/* --- GLOBAL STYLES & INPUT FORM STYLES (Kept for functionality) ------- */
+/* ---------------------------------------------------------------------- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Roboto', Arial, sans-serif; /* Changed font to Roboto for input forms */
+    background: #eef3f9;
+}
+
+/* ================= MAIN FORM STYLES ================= */
+.navbar {
+    background: linear-gradient(135deg, #0061ff, #60b1ff);
+    padding: 18px;
+    color: white;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 0 0 20px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; 
+}
+
+.navbar.hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+}
+
+.container {
+    max-width: 480px;
+    margin: 20px auto;
+    width: 95%;
+}
+
+.section {
+    background: #fff; 
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 17px;
+    font-weight: bold;
+    color: #1e3d59;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+.container > .section:first-of-type {
+    margin-top: 0;
+}
+
+.arrow { transition: 0.3s; }
+.section.active .arrow { transform: rotate(90deg); }
+
+.details {
+    max-height: 0;
+    overflow: hidden;
+    background: #f9fbfe; 
+    margin-top: 5px;
+    padding: 0 15px;
+    border-radius: 14px;
+    transition: max-height .3s ease, padding .3s;
+}
+
+.details.show {
+    padding: 15px;
+    max-height: 600px; 
+}
+
+.field-group {
+    position: relative;
+    margin-top: 14px;
+}
+
+.field-group input {
+    width: 100%;
+    padding: 16px 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background: #f9fbfe;
+}
+
+.field-group label {
+    position: absolute;
+    left: 12px;
+    top: 16px; 
+    color: #666;
+    font-size: 15px;
+    pointer-events: none;
+    padding: 0 5px;
+    transition: 0.2s;
+    background: #f9fbfe;
+}
+
+.field-group input:focus + label,
+.field-group input:not(:placeholder-shown) + label {
+    transform: translateY(-22px) scale(0.85);
+    color: #0061ff;
+    font-weight: bold;
+}
+
+.details input:not(.field-group input), .details select {
+    width: 100%;
+    padding: 14px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    background: #f9fbfe;
+    font-size: 16px;
+}
+
+.details label:not(.field-group label) {
+    display: block;
+    margin-top: 10px;
+    color: #666;
+}
+
+.radio-group {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.radio-group label {
+    flex-grow: 1;
+    text-align: center;
+    padding: 12px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #fff;
+    font-weight: bold;
+}
+
+.radio-group input[type="radio"] { display: none; }
+.radio-group input[type="radio"]:checked + label {
+    background: #e3f2fd;
+    border-color: #0061ff;
+    color: #0061ff;
+}
+
+.btn-submit, .btn-share {
+    width: 100%;
+    padding: 15px;
+    margin-top: 15px;
+    border: none;
+    font-weight: bold;
+    border-radius: 14px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.btn-submit { margin-top: 25px; background: #0061ff; color: white; }
+.btn-share { background: black; color: white; }
+
+/* ================= SNACKBAR STYLES ================= */
+#snackbar {
+    visibility: hidden; 
+    min-width: 280px; 
+    margin-left: -140px; 
+    background-color: #d9534f;
+    color: #fff; 
+    text-align: center; 
+    border-radius: 10px; 
+    padding: 16px; 
+    position: fixed; 
+    z-index: 200; 
+    left: 50%; 
+    bottom: 0; 
+    font-size: 17px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+}
+
+#snackbar.show {
+    visibility: visible; 
+    transform: translateY(-30px);
+    opacity: 1;
+    -webkit-animation: hide_snackbar 0.5s 2.5s forwards;
+    animation: hide_snackbar 0.5s 2.5s forwards;
+}
+
+@keyframes hide_snackbar {
+    to { transform: translateY(100%); opacity: 0; visibility: hidden; }
+}
+@-webkit-keyframes hide_snackbar {
+    to { transform: translateY(100%); opacity: 0; visibility: hidden; }
+}
+
+#snackbar-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    margin-left: 15px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 5px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* ==================== PROFESSIONAL INVOICE STYLES (MERGED) ==================== */
+/* ---------------------------------------------------------------------- */
+
+/* Defined Professional Colors (Kept your recent Black/Black change) */
+:root {
+    --color-primary: black; 
+    --color-accent: black; 
+    --color-text: #333;
+    --color-light-bg: #F8F9FA;
+    --color-border: #E0E0E0;
+}
+
+#invoice_output {
+    background: #fff;
+    padding: 60px 50px; 
+    margin-top: 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    display: none;
+    color: var(--color-text);
+    font-family: 'Roboto', sans-serif;
+    max-width: 800px; 
+    margin-left: auto; 
+    margin-right: auto; 
+    border-top: 8px solid var(--color-primary); 
+}
+
+/* --- LOGO AND TITLE WRAPPER --- */
+.inv-logo-header-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+}
+
+.inv-logo-area {
+    margin-right: 20px;
+}
+
+.inv-logo-area img {
+    max-width: 80px; /* Adjust size as needed */
+    height: auto;
+    display: block;
+}
+/* -------------------------------- */
+
+/* --- Title Section --- */
+.inv-title-text {
+    /* Container for Title and Subtitle */
+}
+
+.inv-company-title {
+    font-weight: 400; /* Made it bold for impact */
+    font-size: 30px; /* Made it larger to fit next to logo */
+    color: var(--color-primary);
+    text-align: left; 
+    margin-bottom: 0px; /* Reduced margin */
+    letter-spacing: 1px;
+    line-height: 1.2;
+}
+
+.inv-subtitle {
+    font-size: 16px;
+    color: #555;
+    text-align: left;
+    margin-top: 5px;
+    margin-bottom: 0; /* Handled by inv-logo-header-wrap margin */
+    font-weight: 300;
+}
+
+/* --- Header Details (From/To) --- */
+.inv-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 50px;
+    gap: 20px;
+}
+
+.inv-col {
+    padding: 15px;
+    background: var(--color-light-bg); 
+    border-left: 4px solid var(--color-accent); 
+    flex-grow: 1;
+    min-width: 45%;
+}
+
+.inv-left-col, .inv-right-col { display: none; } 
+
+.inv-header-flex p {
+    margin: 2px 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #555;
+}
+
+.head-label {
+    font-weight: 700; 
+    color: var(--color-primary); 
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-bottom: 10px !important;
+    display: block; 
+}
+
+/* --- Meta Data (Date, ID) --- */
+.inv-meta-block {
+    text-align: right;
+    width: 100%;
+    margin-bottom: 40px;
+}
+
+.inv-meta-row {
+    margin-bottom: 5px; 
+    font-size: 14px;
+    display: flex;
+    justify-content: flex-end; 
+    gap: 10px;
+    width: 100%;
+}
+
+.inv-meta-label {
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    font-size: 13px;
+    min-width: 100px; 
+    text-align: left;
+}
+.inv-meta-value {
+    color: var(--color-primary);
+    font-weight: 600;
+    min-width: 150px;
+    text-align: right;
+}
+
+/* --- TABLE STYLES --- */
+.inv-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+.inv-table thead tr {
+    background-color: var(--color-primary); 
+}
+
+.inv-table th {
+    color: white; 
+    font-weight: 400; 
+    padding: 15px;
+    text-align: left;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: none;
+}
+
+.inv-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+    color: var(--color-text);
+}
+
+.inv-table tr:last-child td {
+    border-bottom: 2px solid var(--color-border);
+}
+
+/* --- TOTALS SECTION STYLES (FIXED FOR RUPEE/SPACING) --- */
+.inv-totals-wrap {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.inv-totals {
+    width: 320px; 
+    padding: 0; 
+}
+
+.inv-totals-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0; 
+    font-size: 15px;
+}
+
+.inv-totals-row .label { font-weight: 400; color: #555; }
+.inv-totals-row .value { 
+    font-weight: 400; 
+    color: var(--color-text);
+    text-align: right; 
+}
+
+.inv-totals-row.total-final {
+    border-top: 2px solid var(--color-primary); 
+    padding-top: 8px; 
+    margin-top: 5px; 
+    font-size: 20px;
+}
+
+.inv-totals-row.total-final .label { 
+    font-weight: 700; 
+    color: var(--color-primary); 
+    font-family: 'Playfair Display', serif; 
+}
+.inv-totals-row.total-final .value { 
+    font-weight: 700; 
+    color: var(--color-primary); 
+    font-family: 'Source Code Pro', monospace; 
+}
+
+
+.inv-footer-notes {
+    margin-top: 50px;
+    font-size: 14px;
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+}
+
+.inv-footer-notes strong {
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.inv-separator {
+    display: none; 
+}
+.inv-title {
+    display: none; 
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    #invoice_output { padding: 20px; }
+    .inv-header-flex { flex-direction: column; gap: 10px; margin-bottom: 30px; }
+    .inv-col { width: 100%; min-width: 100%; }
+    .inv-totals { width: 100%; }
+    .inv-meta-block { text-align: left; }
+    .inv-meta-row { width: 100%; justify-content: space-between; }
+    .inv-company-title { font-size: 24px; }
+    .inv-logo-area img { max-width: 60px; }
+    .inv-logo-area { margin-right: 15px; }
+    #snackbar {
+        min-width: 90%; 
+        margin-left: -45%; 
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="navbar" id="mainNavbar">Jambavan Land Monitoring Invoice</div>
+
+<div class="container">
+
+    <div class="section active" onclick="toggleBox('detailsBox', this)">
+        Customer Details <span class="arrow">▶</span>
+    </div>
+
+    <div id="detailsBox" class="details show">
+        <div class="field-group">
+            <input type="text" placeholder=" " id="customer_id" required>
+            <label for="customer_id">Customer ID</label>
+        </div>
+        <div class="field-group">
+            <input type="text" placeholder=" " id="customer_name" required>
+            <label for="customer_name">Customer Name</label>
+        </div>
+        <div class="field-group">
+            <input type="number" placeholder=" " id="customer_mobile" required maxlength="10" pattern="\d{10}">
+            <label for="customer_mobile">Customer Mobile</label>
+        </div>
+        <div class="field-group">
+            <input type="text" placeholder=" " id="customer_address" required>
+            <label for="customer_address">Customer Address</label>
+        </div>
+    </div>
+    <div class="section" onclick="toggleBox('machineBox', this)">
+        Machine Survey <span class="arrow">▶</span>
+    </div>
+
+    <div id="machineBox" class="details">
+        <label>Machine Charges</label>
+        <div class="radio-group">
+            <input type="radio" id="rate4000" name="machine_rate" value="4000">
+            <label for="rate4000">₹ 4000</label>
+            <input type="radio" id="rate5000" name="machine_rate" value="5000">
+            <label for="rate5000">₹ 5000</label>
+        </div>
+        <label>Acres to be Surveyed</label>
+        <input type="number" id="acres_input" placeholder="Enter Acres" value="0" min="0" step="0.5">
+        <label>Plot to be Surveyed</label>
+        <input type="number" id="plot_input" placeholder="Enter Plot" value="0" min="0" step="0.5">
+        <label>Labour & Service Charge</label>
+        <input type="number" id="labour_charge_input" placeholder="Enter Amount" value="0" min="0">
+    </div>
+
+    <div class="section" onclick="toggleBox('pattaBox', this)">
+        Patta Verification <span class="arrow">▶</span>
+    </div>
+    <div id="pattaBox" class="details">
+        <label>Patta Verification Amount</label>
+        <input type="number" id="patta_amount_input" placeholder="Enter Amount" value="0" min="0">
+    </div>
+
+    <div class="section" onclick="toggleBox('areaBox', this)">
+        Area Verification <span class="arrow">▶</span>
+    </div>
+    <div id="areaBox" class="details">
+        <label>Area Verification Amount</label>
+        <input type="number" id="area_amount_input" placeholder="Enter Amount" value="0" min="0">
+    </div>
+
+    <div class="section" onclick="toggleBox('linkBox', this)">
+        Link Verification <span class="arrow">▶</span>
+    </div>
+    <div id="linkBox" class="details">
+        <label>Link Verification Amount</label>
+        <input type="number" id="link_amount_input" placeholder="Enter Amount" value="0" min="0">
+    </div>
+
+    <div class="section" onclick="toggleBox('docBox', this)">
+        Document Verification <span class="arrow">▶</span>
+    </div>
+    <div id="docBox" class="details">
+        <label>Document Verification Amount</label>
+        <input type="number" id="doc_amount_input" placeholder="Enter Amount" value="0" min="0">
+    </div>
+
+    <div class="section" onclick="toggleBox('ecBox', this)">
+        EC Verification <span class="arrow">▶</span>
+    </div>
+    <div id="ecBox" class="details">
+        <label>EC Verification Amount</label>
+        <input type="number" id="ec_amount_input" placeholder="Enter Amount" value="0" min="0">
+    </div>
+
+    <div class="section" onclick="toggleBox('ongoingBox', this)">
+        Ongoing Land Monitoring <span class="arrow">▶</span>
+    </div>
+    <div id="ongoingBox" class="details">
+        <label>Ongoing Land Monitoring Amount</label>
+        <input type="number" id="ongoing_amount_input" placeholder="Enter Amount" value="0" min="0">
+    </div>
+
+    <div class="section" onclick="toggleBox('issueBox', this)">
+        Identify Issue And Create File <span class="arrow">▶</span>
+    </div>
+    <div id="issueBox" class="details">
+        <label>Identify Issue And Create File Amount</label>
+        <input type="number" id="issue_amount_input" placeholder="Enter Amount" value="0" min="0">
+    </div>
+
+    <div class="section" onclick="toggleBox('tableBox', this)">
+        Table Work <span class="arrow">▶</span>
+    </div>
+    <div id="tableBox" class="details">
+        <label>Table Work Amount</label>
+        <input type="number" id="table_amount_input" placeholder="Enter Amount" value="0" min="0">
+    </div>
+
+    <div class="section" onclick="toggleBox('fencingBox', this)">
+        Fencing <span class="arrow">▶</span>
+    </div>
+    <div id="fencingBox" class="details">
+        <label>Fencing Amount</label>
+        <input type="number" id="fencing_amount_input" placeholder="Enter Amount" value="0" min="0">
+    </div>
+
+    <div class="section" onclick="toggleBox('sketchBox', this)">
+        Sketching <span class="arrow">▶</span>
+    </div>
+    <div id="sketchBox" class="details">
+        <label>Sketching Amount</label>
+        <input type="number" id="sketch_amount_input" placeholder="Enter Amount" value="0" min="0">
+    </div>
+
+    <div class="section" onclick="toggleBox('notaryBox', this)">
+        Get a Notary for Our Services <span class="arrow">▶</span>
+    </div>
+    <div id="notaryBox" class="details">
+        <label>Notary Service Amount</label>
+        <input type="number" id="notary_amount_input" placeholder="Enter Amount" value="0" min="0">
+    </div>
+
+    <button class="btn-submit" onclick="generateInvoice()">Generate Invoice</button>
+    <div id="invoice_output"></div> 
+    <button class="btn-share" id="shareBtn" style="display:none;" onclick="shareInvoice()">Share Invoice 🚀</button>
+
+</div>
+
+<div id="snackbar">
+    <span id="snackbar-message"></span>
+    <button id="snackbar-close" onclick="hideSnackbarManual()">&times;</button>
+</div>
+
+<script>
+// Global variable to hold the snackbar timeout
+let snackbarTimeout;
+
+// --- START: NEW SCROLL LOGIC FOR NAVBAR VISIBILITY ---
+let lastScrollTop = 0;
+const navbar = document.getElementById('mainNavbar');
+// Get the height once the DOM is loaded
+let navbarHeight = navbar.offsetHeight; 
+
+window.addEventListener('scroll', function() {
+    let st = window.scrollY || document.documentElement.scrollTop;
+
+    // Recalculate height on scroll just in case (though usually static)
+    if (navbarHeight === 0) {
+        navbarHeight = navbar.offsetHeight;
+    }
+
+    // Only apply scroll-to-hide/show behavior if the invoice is displayed
+    if (document.getElementById('invoice_output').style.display === 'block') {
+        
+        // Scrolling Down: Hide navbar after scrolling past its height
+        if (st > lastScrollTop && st > navbarHeight){
+            navbar.classList.add('hidden');
+        } 
+        // Scrolling Up: Show navbar
+        else if (st < lastScrollTop) {
+            navbar.classList.remove('hidden');
+        }
+    }
+    
+    // When the invoice is NOT displayed (input form view)
+    else {
+        // Ensure the navbar is visible when the form is active
+        navbar.classList.remove('hidden');
+    }
+
+    lastScrollTop = st <= 0 ? 0 : st; // Update scroll position for next check
+}, false);
+// --- END: NEW SCROLL LOGIC FOR NAVBAR VISIBILITY ---
+
+
+function toggleBox(id, section) {
+    const box = document.getElementById(id);
+    box.classList.toggle("show");
+    section.classList.toggle("active");
+}
+
+/**
+ * Manually hides the snackbar. Used for the 'x' button.
+ */
+function hideSnackbarManual() {
+    clearTimeout(snackbarTimeout);
+    const snackbar = document.getElementById("snackbar");
+    snackbar.classList.remove("show");
+    
+    // Using setTimeout to reset styles AFTER the smooth CSS transition runs
+    setTimeout(() => {
+        snackbar.style.visibility = 'hidden';
+    }, 500); 
+}
+
+/**
+ * Displays an error message in the snackbar.
+ * @param {string} message The error message to display.
+ */
+function showSnackbar(message) {
+    const snackbar = document.getElementById("snackbar");
+    const snackbarMessage = document.getElementById("snackbar-message");
+    
+    // Clear any existing timeout
+    clearTimeout(snackbarTimeout);
+    
+    // Set the message
+    snackbarMessage.textContent = "❌ " + message;
+    
+    // 1. Reset visibility and animation property before showing
+    snackbar.style.visibility = 'visible'; 
+    snackbar.style.animation = ''; // Clear previous animation to restart the effect
+
+    // 2. Add the "show" class to trigger the slide-up/fade-in
+    snackbar.classList.add("show");
+
+    // 3. Set a timeout to remove the 'show' class after the duration (3000ms) 
+    snackbarTimeout = setTimeout(function(){ 
+        snackbar.classList.remove("show");
+    }, 3000); 
+
+    // If there is an error, ensure the invoice view state is reset
+    document.getElementById('invoice_output').style.display = 'none';
+    document.getElementById('shareBtn').style.display = 'none';
+    document.getElementById('mainNavbar').classList.remove('hidden');
+}
+
+
+const COMPANY_NAME = "Jambavan Land Monitoring";
+const FOUNDER_NAME = "Arputham S";
+const COMPANY_CITY_ZIP = "Hosur, 635109";
+const COMPANY_MOBILE = "6374386821";
+const COMPANY_GSTIN = "33DQUPA5544N1ZC";
+
+function generateInvoice() {
+    const GST_RATE = 0.18; 
+    const MINIMUM_ACRE_CHARGE = 2000;
+
+    const outputDiv = document.getElementById('invoice_output');
+    const shareBtn = document.getElementById('shareBtn');
+    // NOTE: We don't declare 'navbar' here again because it's a global constant now
+    
+    // 1. Gather Customer Details
+    const customerID = document.getElementById('customer_id').value.trim();
+    const customerName = document.getElementById('customer_name').value.trim();
+    const customerMobile = document.getElementById('customer_mobile').value.trim();
+    const customerAddress = document.getElementById('customer_address').value.trim();
+    
+    // Regex to check for exactly 10 digits
+    const mobilePattern = /^\d{10}$/;
+
+    // IMPORTANT: Reset view state before any checks. 
+    outputDiv.style.display = 'none';
+    shareBtn.style.display = 'none';
+    navbar.classList.remove('hidden');
+
+    // --- CHECK 1A: CUSTOMER DETAILS COMPLETENESS ---
+    if (!customerID || !customerName || !customerMobile || !customerAddress) {
+        showSnackbar("All Customer Details (ID, Name, Mobile, Address) are compulsory.");
+        return;
+    }
+
+    // --- CHECK 1B: MOBILE VALIDATION (10 digits only) ---
+    if (!mobilePattern.test(customerMobile)) {
+        showSnackbar("Customer Mobile number must be exactly 10 digits and contain only numbers.");
+        return;
+    }
+
+
+    // 2. Gather Service Values from Inputs
+    const selectedRate = document.querySelector('input[name="machine_rate"]:checked');
+    const machineRate = selectedRate ? parseFloat(selectedRate.value) : 0;
+    
+    const acres = parseFloat(document.getElementById('acres_input').value) || 0;
+    const labourCharge = parseFloat(document.getElementById('labour_charge_input').value) || 0;
+    const pattaAmount = parseFloat(document.getElementById('patta_amount_input').value) || 0;
+    const areaAmount = parseFloat(document.getElementById('area_amount_input').value) || 0;
+    const linkAmount = parseFloat(document.getElementById('link_amount_input').value) || 0;
+    const docAmount = parseFloat(document.getElementById('doc_amount_input').value) || 0;
+    const ecAmount = parseFloat(document.getElementById('ec_amount_input').value) || 0;
+    const ongoingAmount = parseFloat(document.getElementById('ongoing_amount_input').value) || 0;
+    const issueAmount = parseFloat(document.getElementById('issue_amount_input').value) || 0;
+    const tableAmount = parseFloat(document.getElementById('table_amount_input').value) || 0;
+    const fencingAmount = parseFloat(document.getElementById('fencing_amount_input').value) || 0;
+    const sketchAmount = parseFloat(document.getElementById('sketch_amount_input').value) || 0;
+    const notaryAmount = parseFloat(document.getElementById('notary_amount_input').value) || 0;
+
+    // 3. Calculate Total and Build Table Rows
+    let subtotal = 0; 
+    let invoiceRows = '';
+    let sno = 1;
+    
+    // Format function uses non-breaking space (fixed Rupee issue)
+    const format = (num) => `₹&nbsp;${(Math.round(num * 100) / 100).toFixed(2)}`;
+
+    function addRow(description, amount) {
+        if (amount > 0) {
+            subtotal += amount;
+            invoiceRows += `
+                <tr>
+                    <td class="text-center" style="width: 60px;">${sno++}</td>
+                    <td>${description}</td>
+                    <td class="text-right" style="width: 120px;">${format(amount)}</td>
+                </tr>
+            `;
+        }
+    }
+
+    if (machineRate > 0) {
+        addRow("Machine Charges", machineRate);
+    }
+    if (acres > 0) {
+        const item2Rate = acres * MINIMUM_ACRE_CHARGE;
+        addRow(`${acres} Acres Survey (@ ₹${MINIMUM_ACRE_CHARGE}/Acre)`, item2Rate);
+    }
+
+    // Add all other charges using helper function
+    addRow("Labour and Services Charge", labourCharge);
+    addRow("Patta Verification", pattaAmount);
+    addRow("Area Verification", areaAmount);
+    addRow("Link Verification", linkAmount);
+    addRow("Document Verification", docAmount);
+    addRow("EC Verification", ecAmount);
+    addRow("Ongoing Land Monitoring", ongoingAmount);
+    addRow("Identify Issue And Create File", issueAmount);
+    addRow("Table Work", tableAmount);
+    addRow("Fencing", fencingAmount);
+    addRow("Sketching", sketchAmount);
+    addRow("Notary Services", notaryAmount);
+
+    // --- CHECK 2: SERVICES SELECTED ---
+    if (sno === 1) {
+        showSnackbar("Please select or enter amounts for at least one service.");
+        return; 
+    }
+
+    // 4. GST Calculation
+    const gstAmount = subtotal * GST_RATE;
+    const totalAmount = subtotal + gstAmount;
+    const gstRateDisplay = (GST_RATE * 100).toFixed(0);
+
+    const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    const invoiceNumber = "INV-" + customerID.replace(/\D/g, '') + new Date().getFullYear().toString().slice(-2);
+
+    // --- HTML OUTPUT GENERATION (Using the new professional structure with Logo) ---
+    const newInvoiceHTML = `
+        <div class="inv-logo-header-wrap">
+            <div class="inv-logo-area">
+                <img src="../images/jambavan.jpeg" alt="Company Logo" style="border: 1px solid #ccc; padding: 5px; background: white;">
+            </div>
+            <div class="inv-title-text">
+                <p class="inv-company-title">${COMPANY_NAME.toUpperCase()}</p>
+                <p class="inv-subtitle">OFFICIAL INVOICE</p>
+            </div>
+        </div>
+        
+        <div class="inv-meta-block">
+            <p class="inv-meta-row">
+                <span class="inv-meta-label">DATE:</span> <span class="inv-meta-value">${today}</span>
+            </p>
+            <p class="inv-meta-row">
+                <span class="inv-meta-label">CUSTOMER ID:</span> <span class="inv-meta-value">#${customerID}</span>
+            </p>
+        </div>
+
+        <div class="inv-header-flex">
+            
+            <div class="inv-col">
+                <p class="head-label">From (Billed By):</p>
+                <p><strong>${COMPANY_NAME}</strong></p>
+                <p>${FOUNDER_NAME}</p>
+                <p>${COMPANY_CITY_ZIP}</p>
+                <p>Mobile: ${COMPANY_MOBILE}</p>
+                <p>GSTIN: <strong>${COMPANY_GSTIN}</strong></p>  
+            </div>
+
+            <div class="inv-col">
+                <p class="head-label">To (Billed To):</p>
+                <p><strong>${customerName}</strong></p>
+                <p>${customerAddress}</p>
+                <p>Mobile: ${customerMobile}</p>
+            </div>
+            
+        </div>
+
+        <table class="inv-table">
+            <thead>
+                <tr>
+                    <th class="text-center" style="width: 60px;">S.No</th>
+                    <th>Description</th>
+                    <th class="text-right" style="width: 120px;">Amount (INR)</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${invoiceRows}
+            </tbody>
+        </table>
+
+        <div class="inv-totals-wrap">
+            <div class="inv-totals">
+                <div class="inv-totals-row">
+                    <span class="label">Subtotal:</span>
+                    <span class="value">${format(subtotal)}</span>
+                </div>
+                <div class="inv-totals-row">
+                    <span class="label">GST (${gstRateDisplay}%):</span>
+                    <span class="value">${format(gstAmount)}</span>
+                </div>
+                <div class="inv-totals-row total-final">
+                    <span class="label">TOTAL DUE:</span>
+                    <span class="value">${format(totalAmount)}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="inv-footer-notes">
+            <p><strong>Payment Terms:</strong> Upon Receipt</p>
+            <p>Thank you for choosing <strong>Jambavan Land Monitoring</strong>. We ensure complete safety and accuracy.</p>
+        </div>
+    `;
+
+    // --- FINAL SUCCESSFUL DISPLAY ACTIONS ---
+    navbar.classList.add('hidden'); // Initially hide the main sticky navbar
+    outputDiv.innerHTML = newInvoiceHTML;
+    outputDiv.style.display = 'block';
+    shareBtn.style.display = 'block';
+    outputDiv.scrollIntoView({ behavior: 'smooth' });
+}
+
+function shareInvoice() {
+    const invoiceDiv = document.getElementById('invoice_output');
+    html2canvas(invoiceDiv, { scale: 3, useCORS: true }).then(canvas => {
+        canvas.toBlob(function(blob) {
+            const file = new File([blob], 'jambavan-invoice.png', { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({ title: 'Invoice', files: [file] }).catch(err => showSnackbar('Share failed. ' + err));
+            } else {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(file);
+                link.download = 'jambavan-invoice.png';
+                link.click();
+            }
+        });
+    });
+}
+</script>
+
+</body>
+</html>
