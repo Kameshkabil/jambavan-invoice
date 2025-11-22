@@ -96,6 +96,54 @@ body {
     background: #f9fbfe;
 }
 
+/* Specific styling for the range slider to make it look cleaner */
+.details input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    margin: 15px 0 5px 0;
+}
+
+/* Chrome/Safari Track */
+.details input[type="range"]::-webkit-slider-runnable-track {
+    background: #ccc;
+    height: 8px;
+    border-radius: 4px;
+}
+
+/* Firefox Track */
+.details input[type="range"]::-moz-range-track {
+    background: #ccc;
+    height: 8px;
+    border-radius: 4px;
+}
+
+/* Thumb/Handle styling */
+.details input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -6px; /* Center the thumb vertically */
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #0061ff;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    border: 1px solid white;
+}
+
+.details input[type="range"]::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #0061ff;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    border: 1px solid white;
+}
+/* End Range Slider Styling */
+
+
 .field-group label {
     position: absolute;
     left: 12px;
@@ -115,7 +163,7 @@ body {
     font-weight: bold;
 }
 
-.details input:not(.field-group input), .details select {
+.details input:not(.field-group input):not([type="range"]), .details select {
     width: 100%;
     padding: 14px;
     margin-top: 10px;
@@ -131,6 +179,7 @@ body {
     color: #666;
 }
 
+/* The radio-group styling is now obsolete but kept safe in case you revert */
 .radio-group {
     display: flex;
     justify-content: space-around;
@@ -502,18 +551,28 @@ body {
             <label for="customer_address">Customer Address</label>
         </div>
     </div>
+    
     <div class="section" onclick="toggleBox('machineBox', this)">
         Machine Survey <span class="arrow">▶</span>
     </div>
 
     <div id="machineBox" class="details">
-        <label>Machine Charges</label>
-        <div class="radio-group">
-            <input type="radio" id="rate4000" name="machine_rate" value="4000">
-            <label for="rate4000">₹ 4000</label>
-            <input type="radio" id="rate5000" name="machine_rate" value="5000">
-            <label for="rate5000">₹ 5000</label>
-        </div>
+        <label for="machine_rate_input">Machine Charges (Drag to select rate: ₹0 - ₹50,000)</label>
+        
+        <input 
+            type="range" 
+            id="machine_rate_input" 
+            min="0"             
+            max="50000" 
+            step="5000"         
+            value="0"           
+            oninput="updateMachineRateValue(this.value)"
+        >
+        
+        <p style="margin-top: 5px; font-weight: bold; color: #0061ff;">
+            Selected Charge: <span id="machine_rate_display">₹ 0</span>
+        </p>
+
         <label>Acres to be Surveyed</label>
         <input type="number" id="acres_input" placeholder="Enter Acres" value="0" min="0" step="0.5">
         <label>Plot to be Surveyed</label>
@@ -521,7 +580,6 @@ body {
         <label>Labour & Service Charge</label>
         <input type="number" id="labour_charge_input" placeholder="Enter Amount" value="0" min="0">
     </div>
-
     <div class="section" onclick="toggleBox('pattaBox', this)">
         Patta Verification <span class="arrow">▶</span>
     </div>
@@ -625,42 +683,35 @@ body {
 // Global variable to hold the snackbar timeout
 let snackbarTimeout;
 
-// --- START: NEW SCROLL LOGIC FOR NAVBAR VISIBILITY ---
+// --- START: SCROLL LOGIC FOR NAVBAR VISIBILITY ---
 let lastScrollTop = 0;
 const navbar = document.getElementById('mainNavbar');
-// Get the height once the DOM is loaded
 let navbarHeight = navbar.offsetHeight; 
 
 window.addEventListener('scroll', function() {
     let st = window.scrollY || document.documentElement.scrollTop;
 
-    // Recalculate height on scroll just in case (though usually static)
     if (navbarHeight === 0) {
         navbarHeight = navbar.offsetHeight;
     }
 
-    // Only apply scroll-to-hide/show behavior if the invoice is displayed
     if (document.getElementById('invoice_output').style.display === 'block') {
         
-        // Scrolling Down: Hide navbar after scrolling past its height
         if (st > lastScrollTop && st > navbarHeight){
             navbar.classList.add('hidden');
         } 
-        // Scrolling Up: Show navbar
         else if (st < lastScrollTop) {
             navbar.classList.remove('hidden');
         }
     }
     
-    // When the invoice is NOT displayed (input form view)
     else {
-        // Ensure the navbar is visible when the form is active
         navbar.classList.remove('hidden');
     }
 
-    lastScrollTop = st <= 0 ? 0 : st; // Update scroll position for next check
+    lastScrollTop = st <= 0 ? 0 : st;
 }, false);
-// --- END: NEW SCROLL LOGIC FOR NAVBAR VISIBILITY ---
+// --- END: SCROLL LOGIC FOR NAVBAR VISIBILITY ---
 
 
 function toggleBox(id, section) {
@@ -668,6 +719,28 @@ function toggleBox(id, section) {
     box.classList.toggle("show");
     section.classList.toggle("active");
 }
+
+/**
+ * UPDATED: Updates the displayed value next to the range slider.
+ * This is called by the 'oninput' event.
+ */
+function updateMachineRateValue(value) {
+    document.getElementById('machine_rate_display').textContent = `₹ ${value}`;
+}
+
+/**
+ * FIXED: Initializes the displayed value when the page loads.
+ * This function will be called only after the DOM is fully loaded.
+ */
+function initializeMachineRateDisplay() {
+    const machineRateInput = document.getElementById('machine_rate_input');
+    // Check if the element exists before trying to read its value
+    if (machineRateInput) {
+        const initialValue = machineRateInput.value;
+        updateMachineRateValue(initialValue);
+    }
+}
+
 
 /**
  * Manually hides the snackbar. Used for the 'x' button.
@@ -724,11 +797,10 @@ const COMPANY_GSTIN = "33DQUPA5544N1ZC";
 
 function generateInvoice() {
     const GST_RATE = 0.18; 
-    const MINIMUM_ACRE_CHARGE = 2000;
+    const MINIMUM_ACRE_CHARGE = 2500;
 
     const outputDiv = document.getElementById('invoice_output');
     const shareBtn = document.getElementById('shareBtn');
-    // NOTE: We don't declare 'navbar' here again because it's a global constant now
     
     // 1. Gather Customer Details
     const customerID = document.getElementById('customer_id').value.trim();
@@ -736,7 +808,6 @@ function generateInvoice() {
     const customerMobile = document.getElementById('customer_mobile').value.trim();
     const customerAddress = document.getElementById('customer_address').value.trim();
     
-    // Regex to check for exactly 10 digits
     const mobilePattern = /^\d{10}$/;
 
     // IMPORTANT: Reset view state before any checks. 
@@ -758,8 +829,8 @@ function generateInvoice() {
 
 
     // 2. Gather Service Values from Inputs
-    const selectedRate = document.querySelector('input[name="machine_rate"]:checked');
-    const machineRate = selectedRate ? parseFloat(selectedRate.value) : 0;
+    // The value comes directly from the range slider's current position, which is now 0 by default.
+    const machineRate = parseFloat(document.getElementById('machine_rate_input').value) || 0;
     
     const acres = parseFloat(document.getElementById('acres_input').value) || 0;
     const labourCharge = parseFloat(document.getElementById('labour_charge_input').value) || 0;
@@ -796,8 +867,9 @@ function generateInvoice() {
         }
     }
 
+    // This is the key: if machineRate is 0 (the default), this row is skipped.
     if (machineRate > 0) {
-        addRow("Machine Charges", machineRate);
+        addRow("Machine Charges (Custom Rate)", machineRate);
     }
     if (acres > 0) {
         const item2Rate = acres * MINIMUM_ACRE_CHARGE;
@@ -832,7 +904,7 @@ function generateInvoice() {
     const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
     const invoiceNumber = "INV-" + customerID.replace(/\D/g, '') + new Date().getFullYear().toString().slice(-2);
 
-    // --- HTML OUTPUT GENERATION (Using the new professional structure with Logo) ---
+    // --- HTML OUTPUT GENERATION (Invoice Template) ---
     const newInvoiceHTML = `
         <div class="inv-logo-header-wrap">
             <div class="inv-logo-area">
@@ -910,7 +982,7 @@ function generateInvoice() {
     `;
 
     // --- FINAL SUCCESSFUL DISPLAY ACTIONS ---
-    navbar.classList.add('hidden'); // Initially hide the main sticky navbar
+    navbar.classList.add('hidden'); 
     outputDiv.innerHTML = newInvoiceHTML;
     outputDiv.style.display = 'block';
     shareBtn.style.display = 'block';
@@ -933,6 +1005,11 @@ function shareInvoice() {
         });
     });
 }
+
+// ** THE FIX IS HERE **
+// Wait for the entire HTML document to load before calling the initialization function.
+document.addEventListener('DOMContentLoaded', initializeMachineRateDisplay);
+
 </script>
 
 </body>
