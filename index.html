@@ -8,13 +8,11 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
-/* ---------------------------------------------------------------------- */
-/* --- GLOBAL STYLES & INPUT FORM STYLES (Kept for functionality) ------- */
-/* ---------------------------------------------------------------------- */
+/* ... (CSS Styles remain unchanged) ... */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    font-family: 'Roboto', Arial, sans-serif; /* Changed font to Roboto for input forms */
+    font-family: 'Roboto', Arial, sans-serif; 
     background: #eef3f9;
 }
 
@@ -798,6 +796,9 @@ const COMPANY_GSTIN = "33DQUPA5544N1ZC";
 function generateInvoice() {
     const GST_RATE = 0.18; 
     const MINIMUM_ACRE_CHARGE = 2500;
+    // --- ADDED NEW CONSTANT FOR PLOT CHARGE ---
+    const PLOT_CHARGE = 600; 
+    // ------------------------------------------
 
     const outputDiv = document.getElementById('invoice_output');
     const shareBtn = document.getElementById('shareBtn');
@@ -829,10 +830,10 @@ function generateInvoice() {
 
 
     // 2. Gather Service Values from Inputs
-    // The value comes directly from the range slider's current position, which is now 0 by default.
     const machineRate = parseFloat(document.getElementById('machine_rate_input').value) || 0;
     
     const acres = parseFloat(document.getElementById('acres_input').value) || 0;
+    const plots = parseFloat(document.getElementById('plot_input').value) || 0; // Gather plots input
     const labourCharge = parseFloat(document.getElementById('labour_charge_input').value) || 0;
     const pattaAmount = parseFloat(document.getElementById('patta_amount_input').value) || 0;
     const areaAmount = parseFloat(document.getElementById('area_amount_input').value) || 0;
@@ -867,14 +868,23 @@ function generateInvoice() {
         }
     }
 
-    // This is the key: if machineRate is 0 (the default), this row is skipped.
+    // Machine Charges
     if (machineRate > 0) {
         addRow("Machine Charges (Custom Rate)", machineRate);
     }
+    
+    // Acre Charge (₹2500/Acre)
     if (acres > 0) {
         const item2Rate = acres * MINIMUM_ACRE_CHARGE;
         addRow(`${acres} Acres Survey (@ ₹${MINIMUM_ACRE_CHARGE}/Acre)`, item2Rate);
     }
+    
+    // --- ADDED PLOT CHARGE CALCULATION AND ROW ---
+    if (plots > 0) {
+        const plot_total = plots * PLOT_CHARGE;
+        addRow(`${plots} Plot Survey (@ ₹${PLOT_CHARGE}/Plot)`, plot_total);
+    }
+    // ----------------------------------------------
 
     // Add all other charges using helper function
     addRow("Labour and Services Charge", labourCharge);
