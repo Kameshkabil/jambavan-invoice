@@ -503,6 +503,20 @@ body {
     display: none; 
 }
 
+.inv-footer-notes p.warning-note {
+    color: #d9534f; /* A strong color for the warning (red) */
+    font-weight: 700;
+    margin-top: 10px;
+    font-size: 15px;
+}
+
+.gstin-extra-bold {
+    font-weight: 900; /* Maximum boldness */
+    color: var(--color-primary); /* Uses the black color defined earlier */
+    font-size: 14px; /* Slightly larger for emphasis */
+    letter-spacing: 0.5px;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     #invoice_output { padding: 20px; }
@@ -940,10 +954,9 @@ function generateInvoice() {
             <div class="inv-col">
                 <p class="head-label">From (Billed By):</p>
                 <p><strong>${COMPANY_NAME}</strong></p>
-                <p>${FOUNDER_NAME}</p>
                 <p>${COMPANY_CITY_ZIP}</p>
                 <p>Mobile: ${COMPANY_MOBILE}</p>
-                <p>GSTIN: <strong>${COMPANY_GSTIN}</strong></p>  
+                <p>GSTIN: <span class="gstin-extra-bold">${COMPANY_GSTIN}</span></p> 
             </div>
 
             <div class="inv-col">
@@ -988,6 +1001,7 @@ function generateInvoice() {
         <div class="inv-footer-notes">
             <p><strong>Payment Terms:</strong> Upon Receipt</p>
             <p>Thank you for choosing <strong>Jambavan Land Monitoring</strong>. We ensure complete safety and accuracy.</p>
+            <p class="warning-note">** Important: All payment queries must be raised within 24 hours of receiving this invoice. No refunds will be processed after this period. **</p>
         </div>
     `;
 
