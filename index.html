@@ -773,7 +773,7 @@ input[type="date"] {
     <button class="btn-submit" onclick="generateInvoice()">Generate Invoice</button>
     <div id="invoice_output"></div> 
     <button class="btn-share" id="shareBtn" style="display:none;" onclick="shareInvoice()">Share Invoice 🚀</button>
-    <button class="btn-print" id="printBtn" style="display:none;" onclick="window.print()">Print A4 Invoice 🖨️</button>
+    <!-- <button class="btn-print" id="printBtn" style="display:none;" onclick="window.print()">Print A4 Invoice 🖨️</button> -->
 
 </div>
 
@@ -922,7 +922,7 @@ function generateInvoice() {
     // IMPORTANT: Reset view state before any checks. 
     outputDiv.style.display = 'none';
     shareBtn.style.display = 'none';
-    printBtn.style.display = 'none';
+    // printBtn.style.display = 'none';
     navbar.classList.remove('hidden');
 
     // --- CHECK 1A: CUSTOMER DETAILS COMPLETENESS ---
@@ -1111,7 +1111,7 @@ function generateInvoice() {
     outputDiv.innerHTML = newInvoiceHTML;
     outputDiv.style.display = 'block';
     shareBtn.style.display = 'block';
-    printBtn.style.display = 'block';
+    // printBtn.style.display = 'block';
     outputDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -1153,20 +1153,20 @@ async function shareInvoice() {
     pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
 
     const blob = pdf.output("blob");
-    const file = new File([blob], "Invoice.pdf", {
+    const file = new File([blob], "Jambavan_Invoice.pdf", {
         type: "application/pdf"
     });
 
     // Share immediately
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
-            title: "Invoice",
+            title: "Jambavan_Invoice.pdf",
             files: [file]
         });
     } else {
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "Invoice.pdf";
+        link.download = "Jambavan_Invoice.pdf";
         link.click();
     }
 
