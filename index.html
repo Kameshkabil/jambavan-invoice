@@ -6,8 +6,6 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@300;400;700&family=Source+Code+Pro:wght@700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
 
 <style>
 /* ... (CSS Styles remain unchanged) ... */
@@ -1102,39 +1100,21 @@ function generateInvoice() {
 }
 
 function shareInvoice() {
-    const invoice = document.getElementById("invoice_output");
-
-    const opt = {
-        margin:       [10, 10, 10, 10],
-        filename:     'Jambavan_Invoice.pdf',
-        image:        { type: 'jpeg', quality: 1 },
-        html2canvas:  { scale: 2, backgroundColor: '#ffffff' },
-        jsPDF: {
-            unit: 'mm',
-            format: 'a4',
-            orientation: 'portrait'
-        }
-    };
-
-    html2pdf().set(opt).from(invoice).toPdf().get('pdf').then(pdf => {
-        const blob = pdf.output('blob');
-        const file = new File([blob], 'Jambavan_Invoice.pdf', { type: 'application/pdf' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({
-                title: 'Jambavan Invoice',
-                files: [file]
-            }).catch(err => showSnackbar("Share failed"));
-        } else {
-            // fallback download
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'Jambavan_Invoice.pdf';
-            link.click();
-        }
+    const invoiceDiv = document.getElementById('invoice_output');
+    html2canvas(invoiceDiv, { scale: 3, useCORS: true }).then(canvas => {
+        canvas.toBlob(function(blob) {
+            const file = new File([blob], 'jambavan-invoice.png', { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({ title: 'Invoice', files: [file] }).catch(err => showSnackbar('Share failed. ' + err));
+            } else {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(file);
+                link.download = 'jambavan-invoice.png';
+                link.click();
+            }
+        });
     });
 }
-
 
 // ** THE FIX IS HERE **
 // Wait for the entire HTML document to load before calling the initialization function.
