@@ -380,30 +380,34 @@ body {
 
 /* --- Meta Data (Date, ID) --- */
 .inv-meta-block {
-    width: 260px;
-    margin-left: auto;
+    text-align: right;
+    width: 100%;
+    margin-bottom: 40px;
 }
 
 .inv-meta-row {
-    display: grid;
-    grid-template-columns: auto auto;
-    column-gap: 4px;  /* ← minimal spacing */
-    margin-bottom: 4px;
+    margin-bottom: 5px; 
+    font-size: 14px;
+    display: flex;
+    justify-content: flex-end; 
+    gap: 10px;
+    width: 100%;
 }
 
 .inv-meta-label {
-    font-weight: 600;
-    color: #555;
-    white-space: nowrap;
-}
-
-.inv-meta-value {
     font-weight: 700;
-    color: #000;
-    text-align: right;
-    white-space: nowrap;
+    color: #555;
+    text-transform: uppercase;
+    font-size: 13px;
+    min-width: 100px; 
+    text-align: left;
 }
-
+.inv-meta-value {
+    color: var(--color-primary);
+    font-weight: 600;
+    min-width: 150px;
+    text-align: right;
+}
 
 /* --- TABLE STYLES --- */
 .inv-table {
