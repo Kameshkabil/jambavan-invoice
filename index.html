@@ -1117,30 +1117,26 @@ function generateInvoice() {
 
 async function shareInvoice() {
 
-    const originalInvoice = document.getElementById("invoice_output");
+    const invoice = document.getElementById("invoice_output");
 
-    // 🔹 Clone invoice
-    const clone = originalInvoice.cloneNode(true);
+    // Clone invoice (no UI touch)
+    const clone = invoice.cloneNode(true);
 
-    // 🔹 Create wrapper
+    // Off-screen wrapper
     const wrapper = document.createElement("div");
-    wrapper.id = "pdf-print-wrapper";
+    wrapper.style.position = "fixed";
+    wrapper.style.left = "-10000px";
+    wrapper.style.top = "0";
     wrapper.appendChild(clone);
     document.body.appendChild(wrapper);
 
-    // 🔹 Force print look
     clone.style.display = "block";
-    clone.style.boxShadow = "none";
-    clone.style.border = "none";
-    clone.style.margin = "0";
-    clone.style.padding = "0";
-    clone.style.background = "white";
+    clone.style.background = "#fff";
 
-    // Allow DOM paint
-    await new Promise(r => setTimeout(r, 300));
+    // Let browser paint (REQUIRED)
+    await new Promise(r => setTimeout(r, 150));
 
-    // 🔹 Capture
-    const canvas = await html2canvas(wrapper, {
+    const canvas = await html2canvas(clone, {
         scale: 2,
         backgroundColor: "#ffffff",
         useCORS: true
@@ -1148,7 +1144,6 @@ async function shareInvoice() {
 
     const imgData = canvas.toDataURL("image/jpeg", 1.0);
 
-    // 🔹 Create PDF
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p", "mm", "a4");
 
@@ -1157,27 +1152,27 @@ async function shareInvoice() {
 
     pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
 
-    // 🔹 Share or Download
     const blob = pdf.output("blob");
-    const file = new File([blob], "Jambavan_Invoice.pdf", {
+    const file = new File([blob], "Invoice.pdf", {
         type: "application/pdf"
     });
 
+    // Share immediately
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
-            title: "Jambavan Invoice",
+            title: "Invoice",
             files: [file]
         });
     } else {
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "Jambavan_Invoice.pdf";
+        link.download = "Invoice.pdf";
         link.click();
     }
 
-    // 🔹 Cleanup
     document.body.removeChild(wrapper);
 }
+
 
 
 // ** THE FIX IS HERE **
