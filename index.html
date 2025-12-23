@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@300;400;700&family=Source+Code+Pro:wght@700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 
 <style>
 /* ... (CSS Styles remain unchanged) ... */
@@ -603,6 +606,19 @@ input[type="date"] {
     cursor: pointer;
     filter: invert(0.4) sepia(1) saturate(5) hue-rotate(200deg); /* Makes icon blueish */
 }
+
+#pdf-print-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 210mm;
+    min-height: 297mm;
+    background: white;
+    z-index: 99999;
+    padding: 40px;
+}
+
+
 </style>
 </head>
 <body>
@@ -1099,22 +1115,70 @@ function generateInvoice() {
     outputDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
-function shareInvoice() {
-    const invoiceDiv = document.getElementById('invoice_output');
-    html2canvas(invoiceDiv, { scale: 3, useCORS: true }).then(canvas => {
-        canvas.toBlob(function(blob) {
-            const file = new File([blob], 'jambavan-invoice.png', { type: 'image/png' });
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                navigator.share({ title: 'Invoice', files: [file] }).catch(err => showSnackbar('Share failed. ' + err));
-            } else {
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(file);
-                link.download = 'jambavan-invoice.png';
-                link.click();
-            }
-        });
+async function shareInvoice() {
+
+    const originalInvoice = document.getElementById("invoice_output");
+
+    // 🔹 Clone invoice
+    const clone = originalInvoice.cloneNode(true);
+
+    // 🔹 Create wrapper
+    const wrapper = document.createElement("div");
+    wrapper.id = "pdf-print-wrapper";
+    wrapper.appendChild(clone);
+    document.body.appendChild(wrapper);
+
+    // 🔹 Force print look
+    clone.style.display = "block";
+    clone.style.boxShadow = "none";
+    clone.style.border = "none";
+    clone.style.margin = "0";
+    clone.style.padding = "0";
+    clone.style.background = "white";
+
+    // Allow DOM paint
+    await new Promise(r => setTimeout(r, 300));
+
+    // 🔹 Capture
+    const canvas = await html2canvas(wrapper, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        useCORS: true
     });
+
+    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+
+    // 🔹 Create PDF
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const pdfWidth = 210;
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+
+    // 🔹 Share or Download
+    const blob = pdf.output("blob");
+    const file = new File([blob], "Jambavan_Invoice.pdf", {
+        type: "application/pdf"
+    });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+            title: "Jambavan Invoice",
+            files: [file]
+        });
+    } else {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "Jambavan_Invoice.pdf";
+        link.click();
+    }
+
+    // 🔹 Cleanup
+    document.body.removeChild(wrapper);
 }
+
 
 // ** THE FIX IS HERE **
 // Wait for the entire HTML document to load before calling the initialization function.
@@ -1122,5 +1186,7 @@ document.addEventListener('DOMContentLoaded', initializeMachineRateDisplay);
 
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </body>
 </html>
