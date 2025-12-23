@@ -533,6 +533,76 @@ body {
         margin-left: -45%; 
     }
 }
+
+/* Styling for the Print Button */
+.btn-print {
+    width: 100%;
+    padding: 15px;
+    margin-top: 10px;
+    background: #28a745; /* Green color */
+    color: white;
+    border: none;
+    font-weight: bold;
+    border-radius: 14px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* ================= THE PRINT ENGINE ================= */
+/* ================= FIXED PRINT ENGINE ================= */
+@media print {
+    /* 1. Reset page margins to zero */
+    @page {
+        size: A4;
+        margin: 0; /* This moves the header to the absolute top */
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background: white !important;
+    }
+
+    /* 2. Hide everything except the invoice */
+    .navbar, .container > .section, .container > .details, 
+    .btn-submit, .btn-share, .btn-print, #snackbar {
+        display: none !important;
+    }
+
+    /* 3. Position the invoice output at the top */
+    #invoice_output {
+        display: block !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 40px; /* Add internal padding so text doesn't touch the paper edge */
+        box-shadow: none !important;
+        border-top: none !important;
+    }
+}
+
+/* Styling for the Date Picker */
+input[type="date"] {
+    appearance: none;
+    -webkit-appearance: none;
+    color: #333;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Ensure the label stays up when a date is picked */
+.field-group input[type="date"]:focus + label,
+.field-group input[type="date"]:valid + label {
+    transform: translateY(-22px) scale(0.85);
+    color: #0061ff;
+    font-weight: bold;
+}
+
+/* Customizing the calendar icon color */
+::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(0.4) sepia(1) saturate(5) hue-rotate(200deg); /* Makes icon blueish */
+}
 </style>
 </head>
 <body>
@@ -562,6 +632,10 @@ body {
             <input type="text" placeholder=" " id="customer_address" required>
             <label for="customer_address">Customer Address</label>
         </div>
+        <div class="field-group">
+    <input type="date" id="invoice_date" required>
+    <label>Invoice Date</label>
+</div>
     </div>
     
     <div class="section" onclick="toggleBox('machineBox', this)">
@@ -683,6 +757,7 @@ body {
     <button class="btn-submit" onclick="generateInvoice()">Generate Invoice</button>
     <div id="invoice_output"></div> 
     <button class="btn-share" id="shareBtn" style="display:none;" onclick="shareInvoice()">Share Invoice 🚀</button>
+    <button class="btn-print" id="printBtn" style="display:none;" onclick="window.print()">Print A4 Invoice 🖨️</button>
 
 </div>
 
@@ -816,23 +891,27 @@ function generateInvoice() {
 
     const outputDiv = document.getElementById('invoice_output');
     const shareBtn = document.getElementById('shareBtn');
+    const printBtn = document.getElementById('printBtn');
+    
     
     // 1. Gather Customer Details
     const customerID = document.getElementById('customer_id').value.trim();
     const customerName = document.getElementById('customer_name').value.trim();
     const customerMobile = document.getElementById('customer_mobile').value.trim();
     const customerAddress = document.getElementById('customer_address').value.trim();
+    const selectedDate = document.getElementById('invoice_date').value;
     
     const mobilePattern = /^\d{10}$/;
 
     // IMPORTANT: Reset view state before any checks. 
     outputDiv.style.display = 'none';
     shareBtn.style.display = 'none';
+    printBtn.style.display = 'none';
     navbar.classList.remove('hidden');
 
     // --- CHECK 1A: CUSTOMER DETAILS COMPLETENESS ---
-    if (!customerID || !customerName || !customerMobile || !customerAddress) {
-        showSnackbar("All Customer Details (ID, Name, Mobile, Address) are compulsory.");
+    if (!customerID || !customerName || !customerMobile || !customerAddress || !selectedDate) {
+        showSnackbar("All Customer Details (ID, Name, Mobile, Address, Date) are compulsory.");
         return;
     }
 
@@ -925,24 +1004,30 @@ function generateInvoice() {
     const totalAmount = subtotal + gstAmount;
     const gstRateDisplay = (GST_RATE * 100).toFixed(0);
 
-    const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    // const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    const dateObj = new Date(selectedDate);
+    const formattedDate = dateObj.toLocaleDateString('en-GB', { 
+        day: '2-digit', 
+        month: 'long', 
+        year: 'numeric' 
+    });
     const invoiceNumber = "INV-" + customerID.replace(/\D/g, '') + new Date().getFullYear().toString().slice(-2);
 
     // --- HTML OUTPUT GENERATION (Invoice Template) ---
     const newInvoiceHTML = `
-        <div class="inv-logo-header-wrap">
-            <div class="inv-logo-area">
-                <img src="images/jambavan.jpeg" alt="Company Logo" style="border: 1px solid #ccc; padding: 5px; background: white;">
-            </div>
-            <div class="inv-title-text">
-                <p class="inv-company-title">${COMPANY_NAME.toUpperCase()}</p>
-                <p class="inv-subtitle">OFFICIAL INVOICE</p>
-            </div>
+       <div class="inv-logo-header-wrap" style="margin-bottom: 40px; border-bottom: 2px solid #eee; padding-bottom: 20px;">
+        <div class="inv-logo-area">
+            <img src="images/jambavan.jpeg" alt="Logo" style="max-width: 80px;">
         </div>
+        <div class="inv-title-text">
+            <p class="inv-company-title">JAMBAVAN LAND MONITORING</p>
+            <p class="inv-subtitle">OFFICIAL INVOICE</p>
+        </div>
+    </div>
         
         <div class="inv-meta-block">
             <p class="inv-meta-row">
-                <span class="inv-meta-label">DATE:</span> <span class="inv-meta-value">${today}</span>
+                <span class="inv-meta-label">DATE:</span> <span class="inv-meta-value">${formattedDate}</span>
             </p>
             <p class="inv-meta-row">
                 <span class="inv-meta-label">CUSTOMER ID:</span> <span class="inv-meta-value">#${customerID}</span>
@@ -1010,6 +1095,7 @@ function generateInvoice() {
     outputDiv.innerHTML = newInvoiceHTML;
     outputDiv.style.display = 'block';
     shareBtn.style.display = 'block';
+    printBtn.style.display = 'block';
     outputDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
