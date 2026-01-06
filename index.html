@@ -645,6 +645,11 @@ input[type="date"] {
             <label for="customer_mobile">Customer Mobile</label>
         </div>
         <div class="field-group">
+    <input type="text" placeholder=" " id="customer_gst">
+    <label for="customer_gst">Customer GST Number (Optional)</label>
+</div>
+
+        <div class="field-group">
             <input type="text" placeholder=" " id="customer_address" required>
             <label for="customer_address">Customer Address</label>
         </div>
@@ -914,6 +919,7 @@ function generateInvoice() {
     const customerID = document.getElementById('customer_id').value.trim();
     const customerName = document.getElementById('customer_name').value.trim();
     const customerMobile = document.getElementById('customer_mobile').value.trim();
+    const customerGST = document.getElementById('customer_gst').value.trim();
     const customerAddress = document.getElementById('customer_address').value.trim();
     const selectedDate = document.getElementById('invoice_date').value;
     
@@ -1065,6 +1071,7 @@ function generateInvoice() {
                 <p><strong>${customerName}</strong></p>
                 <p>${customerAddress}</p>
                 <p>Mobile: ${customerMobile}</p>
+                ${customerGST ? `<p>GSTIN: <span class="gstin-extra-bold">${customerGST}</span></p>` : ``}
             </div>
             
         </div>
