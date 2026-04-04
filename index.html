@@ -905,7 +905,7 @@ const COMPANY_GSTIN = "33DQUPA5544N1ZC";
 
 function generateInvoice() {
     const GST_RATE = 0.18; 
-    const MINIMUM_ACRE_CHARGE = 2500;
+    const MINIMUM_ACRE_CHARGE = 4000;
     // --- ADDED NEW CONSTANT FOR PLOT CHARGE ---
     const PLOT_CHARGE = 600; 
     // ------------------------------------------
@@ -988,7 +988,7 @@ function generateInvoice() {
         addRow("Machine Charges", machineRate);
     }
     
-    // Acre Charge (₹2500/Acre)
+    // Acre Charge (₹4000/Acre)
     if (acres > 0) {
         const item2Rate = acres * MINIMUM_ACRE_CHARGE;
         addRow(`${acres} Acres Survey (@ ₹${MINIMUM_ACRE_CHARGE}/Acre)`, item2Rate);
@@ -997,7 +997,7 @@ function generateInvoice() {
     // --- ADDED PLOT CHARGE CALCULATION AND ROW ---
     if (plots > 0) {
         const plot_total = plots * PLOT_CHARGE;
-        addRow(`${plots} Plot Survey (@ ₹${PLOT_CHARGE}/Plot)`, plot_total);
+        addRow(`${plots} Point Survey (@ ₹${PLOT_CHARGE}/Point)`, plot_total);
     }
     // ----------------------------------------------
 
