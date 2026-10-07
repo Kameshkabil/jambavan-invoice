@@ -680,8 +680,23 @@ input[type="date"] {
             Selected Charge: <span id="machine_rate_display">₹ 0</span>
         </p>
 
+        <label for="acre_rate_input">Rate per Acre (Drag to select rate: ₹0 - ₹20,000)</label>
+        <input
+            type="range"
+            id="acre_rate_input"
+            min="0"
+            max="20000"
+            step="500"
+            value="8500"
+            oninput="updateAcreDisplay()"
+        >
+        <p style="margin-top: 5px; font-weight: bold; color: #0061ff;">
+            Selected Rate: <span id="acre_rate_display">₹ 8500</span> / Acre
+        </p>
+
         <label>Acres to be Surveyed</label>
-        <input type="number" id="acres_input" placeholder="Enter Acres" value="0" min="0" step="0.5">
+        <input type="number" id="acres_input" placeholder="Enter Acres" value="0" min="0" step="0.5" oninput="updateAcreDisplay()">
+        <p id="acre_total_display" style="margin-top: 5px; font-weight: bold; color: #0061ff; display: none;"></p>
         <label>Plot to be Surveyed</label>
         <input type="number" id="plot_input" placeholder="Enter Plot" value="0" min="0" step="0.5">
         <label>Labour & Service Charge</label>
@@ -847,6 +862,22 @@ function initializeMachineRateDisplay() {
         const initialValue = machineRateInput.value;
         updateMachineRateValue(initialValue);
     }
+    updateAcreDisplay();
+}
+
+// Updates the selected acre rate and shows the acre total once acres are entered
+function updateAcreDisplay() {
+    const rate = parseFloat(document.getElementById('acre_rate_input').value) || 0;
+    const acres = parseFloat(document.getElementById('acres_input').value) || 0;
+    document.getElementById('acre_rate_display').textContent = `₹ ${rate}`;
+
+    const totalDisplay = document.getElementById('acre_total_display');
+    if (acres > 0) {
+        totalDisplay.textContent = `${acres} Acres × ₹ ${rate} = ₹ ${(acres * rate).toFixed(2)}`;
+        totalDisplay.style.display = 'block';
+    } else {
+        totalDisplay.style.display = 'none';
+    }
 }
 
 
@@ -905,7 +936,7 @@ const COMPANY_GSTIN = "33DQUPA5544N1ZC";
 
 function generateInvoice() {
     const GST_RATE = 0.18; 
-    const MINIMUM_ACRE_CHARGE = 8500;
+    const MINIMUM_ACRE_CHARGE = parseFloat(document.getElementById('acre_rate_input').value) || 0;
     // --- ADDED NEW CONSTANT FOR PLOT CHARGE ---
     const PLOT_CHARGE = 600; 
     // ------------------------------------------
@@ -988,7 +1019,7 @@ function generateInvoice() {
         addRow("Machine Charges", machineRate);
     }
     
-    // Acre Charge (₹4000/Acre)
+    // Acre Charge (rate selected from slider)
     if (acres > 0) {
         const item2Rate = acres * MINIMUM_ACRE_CHARGE;
         addRow(`${acres} Acres Survey (@ ₹${MINIMUM_ACRE_CHARGE}/Acre)`, item2Rate);
