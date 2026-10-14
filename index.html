@@ -520,6 +520,16 @@ body {
     letter-spacing: 0.5px;
 }
 
+/* Compact layout when the invoice has many rows (keeps it on one A4 page) */
+#invoice_output.compact { padding-top: 35px; padding-bottom: 35px; }
+#invoice_output.compact .inv-logo-header-wrap { margin-bottom: 20px !important; padding-bottom: 12px !important; }
+#invoice_output.compact .inv-meta-block { margin-bottom: 20px; }
+#invoice_output.compact .inv-header-flex { margin-bottom: 25px; }
+#invoice_output.compact .inv-table th { padding: 10px 15px; }
+#invoice_output.compact .inv-table td { padding: 7px 15px; font-size: 13px; }
+#invoice_output.compact .inv-table { margin-bottom: 20px; }
+#invoice_output.compact .inv-footer-notes { margin-top: 25px; padding-top: 12px; font-size: 13px; }
+
 /* Responsive */
 @media (max-width: 600px) {
     #invoice_output { padding: 20px; }
@@ -1379,6 +1389,8 @@ function generateInvoice() {
     // --- FINAL SUCCESSFUL DISPLAY ACTIONS ---
     navbar.classList.add('hidden'); 
     outputDiv.innerHTML = newInvoiceHTML;
+    // Many rows: tighten spacing so everything stays on one A4 page
+    outputDiv.classList.toggle('compact', sno - 1 > 10);
     outputDiv.style.display = 'block';
     shareBtn.style.display = 'block';
     // printBtn.style.display = 'block';
@@ -1417,10 +1429,18 @@ async function shareInvoice() {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p", "mm", "a4");
 
-    const pdfWidth = 210;
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    // Fit the whole invoice on a single A4 page (scale down if it is too tall)
+    const pageWidth = 210;
+    const pageHeight = 297;
+    let pdfWidth = pageWidth;
+    let pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    if (pdfHeight > pageHeight) {
+        pdfHeight = pageHeight;
+        pdfWidth = (canvas.width * pdfHeight) / canvas.height;
+    }
+    const offsetX = (pageWidth - pdfWidth) / 2;
 
-    pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+    pdf.addImage(imgData, "JPEG", offsetX, 0, pdfWidth, pdfHeight);
 
     const blob = pdf.output("blob");
     const file = new File([blob], "Jambavan_Invoice.pdf", {
